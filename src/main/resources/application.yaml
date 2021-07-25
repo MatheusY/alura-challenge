@@ -1,0 +1,13 @@
+server:
+  port: 8081
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/challenge
+    username: postgres
+    password: postgres

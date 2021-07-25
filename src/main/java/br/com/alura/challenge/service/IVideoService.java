@@ -14,4 +14,6 @@ public interface IVideoService {
 
 	void atualiza(final Video video);
 
+	void apagar(final Long id);
+
 }

@@ -107,6 +107,22 @@ public class VideoServiceTest {
 		verify(videoRepository, times(0)).save(any());
 	}
 
+	@Test
+	void testApagar() {
+		when(videoRepository.existsById(1L)).thenReturn(true);
+		videoService.apagar(1L);
+		verify(videoRepository).existsById(1L);
+		verify(videoRepository).deleteById(1L);
+	}
+
+	@Test
+	void testApagarNaoEncontrado() {
+		when(videoRepository.existsById(1L)).thenReturn(false);
+		assertThrows(VideoNotFoundException.class, () -> videoService.apagar(1L));
+		verify(videoRepository).existsById(1L);
+		verify(videoRepository, times(0)).deleteById(any());
+	}
+
 	private Video createVideo() {
 		Video video = new Video();
 		video.setTitulo("Titulo test");

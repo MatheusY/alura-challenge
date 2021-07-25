@@ -17,6 +17,7 @@ public class VideoService implements IVideoService {
 
 	@Override
 	public Video salvar(final Video video) {
+		video.setAtivo(true);
 		return videoRepository.save(video);
 	}
 
@@ -32,10 +33,20 @@ public class VideoService implements IVideoService {
 
 	@Override
 	public void atualiza(final Video video) {
-		if (!videoRepository.existsById(video.getId())) {
-			throw new VideoNotFoundException();
-		}
+		verificaSeExiste(video.getId());
+		video.setAtivo(true);
 		videoRepository.save(video);
 	}
 
+	@Override
+	public void apagar(Long id) {
+		verificaSeExiste(id);
+		videoRepository.deleteById(id);
+	}
+
+	private void verificaSeExiste(final Long id) {
+		if (!videoRepository.existsById(id)) {
+			throw new VideoNotFoundException();
+		}
+	}
 }

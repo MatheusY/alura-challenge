@@ -11,11 +11,16 @@ import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import org.hibernate.annotations.Where;
+
+import br.com.alura.challenge.constants.WhereConstant;
+
 @Getter
 @Setter
 @Entity
 @Table(name = "TB_VIDEO")
-public class Video {
+@Where(clause = WhereConstant.ATIVO)
+public class Video extends DeletableEntity {
 
 	@Id
 	@Column(name = "ID")

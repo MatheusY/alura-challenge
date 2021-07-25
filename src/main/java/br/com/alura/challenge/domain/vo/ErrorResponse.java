@@ -15,6 +15,8 @@ import br.com.alura.challenge.domain.entity.FieldError;
 @Builder
 public class ErrorResponse {
 
+	private String message;
+
 	private String details;
 
 	private List<FieldError> fieldErros;

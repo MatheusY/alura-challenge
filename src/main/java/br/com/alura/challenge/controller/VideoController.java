@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +37,12 @@ public class VideoController extends BaseController {
 	@ResponseStatus(HttpStatus.OK)
 	public List<VideoVO> getAll() {
 		return convert(videoService.buscarTodos(), VideoVO.class);
+	}
+
+	@GetMapping("/{id}")
+	@ResponseStatus(HttpStatus.OK)
+	public VideoVO getById(@PathVariable Long id) {
+		return convert(videoService.buscarPorId(id), VideoVO.class);
 	}
 
 }

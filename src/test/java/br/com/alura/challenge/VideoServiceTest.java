@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import br.com.alura.challenge.domain.entity.Video;
+import br.com.alura.challenge.exception.VideoNotFoundException;
 import br.com.alura.challenge.repository.VideoRepository;
 import br.com.alura.challenge.service.VideoService;
 
@@ -66,6 +68,23 @@ public class VideoServiceTest {
 		assertEquals(0, todos.size());
 	}
 
+	@Test
+	void testBuscaPorId() {
+		Video video = createVideo();
+		video.setId(1L);
+		when(videoRepository.findById(1L)).thenReturn(Optional.of(video));
+		Video videoSalvo = videoService.buscarPorId(video.getId());
+		verify(videoRepository).findById(1L);
+		compareVideo(video, videoSalvo);
+	}
+
+	@Test
+	void testBuscaPorIdNaoEncontrado() {
+		when(videoRepository.findById(1L)).thenReturn(Optional.empty());
+		assertThrows(VideoNotFoundException.class, () -> videoService.buscarPorId(1L));
+		verify(videoRepository).findById(1L);
+	}
+
 	private Video createVideo() {
 		Video video = new Video();
 		video.setTitulo("Titulo test");
@@ -74,11 +93,11 @@ public class VideoServiceTest {
 		return video;
 	}
 
-	private void compareVideo(Video videoSalvo, Video novoVideo) {
-		assertEquals(videoSalvo.getId(), novoVideo.getId());
-		assertEquals(videoSalvo.getDescricao(), novoVideo.getDescricao());
-		assertEquals(videoSalvo.getTitulo(), novoVideo.getTitulo());
-		assertEquals(videoSalvo.getUrl(), novoVideo.getUrl());
+	private void compareVideo(Video videoEsperado, Video videoAtual) {
+		assertEquals(videoEsperado.getId(), videoAtual.getId());
+		assertEquals(videoEsperado.getDescricao(), videoAtual.getDescricao());
+		assertEquals(videoEsperado.getTitulo(), videoAtual.getTitulo());
+		assertEquals(videoEsperado.getUrl(), videoAtual.getUrl());
 	}
 
 }

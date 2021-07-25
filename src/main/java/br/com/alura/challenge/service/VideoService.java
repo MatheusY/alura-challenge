@@ -1,5 +1,7 @@
 package br.com.alura.challenge.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,11 @@ public class VideoService implements IVideoService {
 	@Override
 	public Video salvar(Video video) {
 		return videoRepository.save(video);
+	}
+
+	@Override
+	public List<Video> buscarTodos() {
+		return videoRepository.findAll();
 	}
 
 }

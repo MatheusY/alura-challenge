@@ -1,9 +1,12 @@
 package br.com.alura.challenge.controller;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.alura.challenge.domain.dto.VideoDTO;
 import br.com.alura.challenge.domain.entity.Video;
+import br.com.alura.challenge.domain.vo.VideoVO;
 import br.com.alura.challenge.service.IVideoService;
 
 @RestController
@@ -26,6 +30,12 @@ public class VideoController extends BaseController {
 	public Long save(@RequestBody @Valid VideoDTO videoDto) {
 		Video video = videoService.salvar(convert(videoDto, Video.class));
 		return video.getId();
+	}
+
+	@GetMapping
+	@ResponseStatus(HttpStatus.OK)
+	public List<VideoVO> getAll() {
+		return convert(videoService.buscarTodos(), VideoVO.class);
 	}
 
 }

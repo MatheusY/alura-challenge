@@ -12,4 +12,6 @@ public interface IVideoService {
 
 	Video buscarPorId(final Long id);
 
+	void atualiza(final Video video);
+
 }

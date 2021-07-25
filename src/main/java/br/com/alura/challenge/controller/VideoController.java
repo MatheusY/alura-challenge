@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -43,6 +44,14 @@ public class VideoController extends BaseController {
 	@ResponseStatus(HttpStatus.OK)
 	public VideoVO getById(@PathVariable Long id) {
 		return convert(videoService.buscarPorId(id), VideoVO.class);
+	}
+
+	@PutMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void update(@PathVariable Long id, @RequestBody @Valid VideoDTO videoDTO) {
+		Video video = convert(videoDTO, Video.class);
+		video.setId(id);
+		videoService.atualiza(video);
 	}
 
 }

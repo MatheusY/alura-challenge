@@ -3,6 +3,7 @@ package br.com.alura.challenge;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -83,6 +84,27 @@ public class VideoServiceTest {
 		when(videoRepository.findById(1L)).thenReturn(Optional.empty());
 		assertThrows(VideoNotFoundException.class, () -> videoService.buscarPorId(1L));
 		verify(videoRepository).findById(1L);
+	}
+
+	@Test
+	void testAtualiza() {
+		Video video = createVideo();
+		video.setId(1L);
+		when(videoRepository.existsById(1L)).thenReturn(true);
+		when(videoRepository.save(video)).thenReturn(createVideo());
+		videoService.atualiza(video);
+		verify(videoRepository).existsById(1L);
+		verify(videoRepository).save(video);
+	}
+
+	@Test
+	void testAtualizaNaoEncontrado() {
+		Video video = createVideo();
+		video.setId(1L);
+		when(videoRepository.existsById(1L)).thenReturn(false);
+		assertThrows(VideoNotFoundException.class, () -> videoService.atualiza(video));
+		verify(videoRepository).existsById(1L);
+		verify(videoRepository, times(0)).save(any());
 	}
 
 	private Video createVideo() {

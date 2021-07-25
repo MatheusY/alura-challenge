@@ -30,4 +30,12 @@ public class VideoService implements IVideoService {
 		return videoRepository.findById(id).orElseThrow(VideoNotFoundException::new);
 	}
 
+	@Override
+	public void atualiza(final Video video) {
+		if (!videoRepository.existsById(video.getId())) {
+			throw new VideoNotFoundException();
+		}
+		videoRepository.save(video);
+	}
+
 }

@@ -1,6 +1,7 @@
 package br.com.alura.challenge.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,11 @@ public class CategoriaService extends AbstractDeletableEntityService<Categoria> 
 		} catch (DataIntegrityViolationException e) {
 			throw new InvalidKeyException(e, mensagens);
 		}
+	}
+
+	@Override
+	public List<Categoria> buscaTodos() {
+		return categoriaRepository.findAll();
 	}
 
 }

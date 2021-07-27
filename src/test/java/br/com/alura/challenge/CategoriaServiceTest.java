@@ -1,10 +1,14 @@
 package br.com.alura.challenge;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +54,22 @@ public class CategoriaServiceTest {
 		when(categoriaRepository.save(categoria)).thenThrow(DATA_INTEGRITY_EXCEPTION);
 		assertThrows(InvalidKeyException.class, () -> categoriaService.salvar(categoria));
 		verify(categoriaRepository).save(categoria);
+	}
+
+	@Test
+	public void testBuscaTodos() {
+		when(categoriaRepository.findAll()).thenReturn(List.of(createCategoria()));
+		List<Categoria> categorias = categoriaService.buscaTodos();
+		verify(categoriaRepository).findAll();
+		assertEquals(1, categorias.size());
+	}
+
+	@Test
+	public void testBuscaTodosSemResultado() {
+		when(categoriaRepository.findAll()).thenReturn(new ArrayList<>());
+		List<Categoria> categorias = categoriaService.buscaTodos();
+		verify(categoriaRepository).findAll();
+		assertTrue(categorias.isEmpty());
 	}
 
 	private Categoria createCategoria() {

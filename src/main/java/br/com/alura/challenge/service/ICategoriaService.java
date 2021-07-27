@@ -12,4 +12,6 @@ public interface ICategoriaService {
 	List<Categoria> buscaTodos();
 
 	Categoria buscaPorId(final Short id);
+
+	void atualiza(final Categoria categoria) throws InvalidKeyException;
 }

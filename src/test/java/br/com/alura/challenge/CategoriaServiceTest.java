@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -86,6 +87,31 @@ public class CategoriaServiceTest {
 		when(categoriaRepository.findById((short) 1)).thenReturn(Optional.empty());
 		assertThrows(CategoriaNotFoundException.class, () -> categoriaService.buscaPorId((short) 1));
 		verify(categoriaRepository).findById((short) 1);
+	}
+
+	@Test
+	public void testAtualiza() throws InvalidKeyException {
+		Categoria novaCategoria = createCategoria();
+		novaCategoria.setId((short) 1);
+		when(categoriaRepository.existsById((short) 1)).thenReturn(true);
+		categoriaService.atualiza(novaCategoria);
+		verify(categoriaRepository).save(novaCategoria);
+	}
+
+	@Test
+	public void testAtualizaNaoEncontrado() {
+		when(categoriaRepository.existsById(any())).thenReturn(false);
+		assertThrows(CategoriaNotFoundException.class, () -> categoriaService.atualiza(createCategoria()));
+		verify(categoriaRepository, times(0)).save(any());
+	}
+
+	@Test
+	public void testAtualizaTituloJaCadastrado() {
+		Categoria categoria = createCategoria();
+		when(categoriaRepository.existsById(any())).thenReturn(true);
+		when(categoriaRepository.save(categoria)).thenThrow(DATA_INTEGRITY_EXCEPTION);
+		assertThrows(InvalidKeyException.class, () -> categoriaService.atualiza(categoria));
+		verify(categoriaRepository).save(categoria);
 	}
 
 	private Categoria createCategoria() {

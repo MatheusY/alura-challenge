@@ -27,12 +27,7 @@ public class CategoriaService extends AbstractDeletableEntityService<Categoria> 
 
 	@Override
 	public Categoria salvar(final Categoria categoria) throws InvalidKeyException {
-		ativar(categoria);
-		try {
-			return categoriaRepository.save(categoria);
-		} catch (DataIntegrityViolationException e) {
-			throw new InvalidKeyException(e, mensagens);
-		}
+		return gravar(categoria);
 	}
 
 	@Override
@@ -43,6 +38,27 @@ public class CategoriaService extends AbstractDeletableEntityService<Categoria> 
 	@Override
 	public Categoria buscaPorId(final Short id) {
 		return categoriaRepository.findById(id).orElseThrow(CategoriaNotFoundException::new);
+	}
+
+	@Override
+	public void atualiza(final Categoria categoria) throws InvalidKeyException {
+		verificaSeExiste(categoria.getId());
+		gravar(categoria);
+	}
+
+	private Categoria gravar(final Categoria categoria) throws InvalidKeyException {
+		ativar(categoria);
+		try {
+			return categoriaRepository.save(categoria);
+		} catch (DataIntegrityViolationException e) {
+			throw new InvalidKeyException(e, mensagens);
+		}
+	}
+
+	private void verificaSeExiste(final Short id) {
+		if (!categoriaRepository.existsById(id)) {
+			throw new CategoriaNotFoundException();
+		}
 	}
 
 }

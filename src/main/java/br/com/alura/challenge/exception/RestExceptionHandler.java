@@ -50,4 +50,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 		return new ResponseEntity<>(error, status);
 	}
 
+	@ExceptionHandler(BusinessException.class)
+	public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex, WebRequest request) {
+		ErrorResponse error = ErrorResponse.builder() //
+				.message(ex.getMessage()) //
+				.details(request.getDescription(false)) //
+				.build();
+
+		return new ResponseEntity<>(error, ex.getStatus());
+	}
+
 }

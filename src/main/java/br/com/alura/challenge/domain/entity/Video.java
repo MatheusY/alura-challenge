@@ -12,7 +12,6 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 
 import org.hibernate.annotations.Where;
@@ -41,7 +40,6 @@ public class Video extends DeletableEntity {
 	@Column(name = "URL", length = 100, nullable = false)
 	private String url;
 
-	@NonNull
 	@ManyToOne
 	@JoinColumn(name = "ID_CATEGORIA", referencedColumnName = "ID", foreignKey = @ForeignKey(name = "FK_VIDEO_01"))
 	private Categoria categoria;

@@ -1,5 +1,6 @@
 package br.com.alura.challenge;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -18,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import br.com.alura.challenge.domain.entity.Categoria;
 import br.com.alura.challenge.domain.entity.Video;
 import br.com.alura.challenge.exception.VideoNotFoundException;
 import br.com.alura.challenge.repository.VideoRepository;
@@ -42,6 +44,18 @@ public class VideoServiceTest {
 		videoSalvo.setId(1L);
 		when(videoRepository.save(any())).thenReturn(videoSalvo);
 		Video novoVideo = videoService.salvar(createVideo());
+		verify(videoRepository).save(any());
+		compareVideo(videoSalvo, novoVideo);
+	}
+
+	@Test
+	public void testSalvarVideoSemCategoria() {
+		Video videoSalvo = createVideo();
+		videoSalvo.setId(1L);
+		when(videoRepository.save(any())).thenReturn(videoSalvo);
+		Video videoNaoSalvo = createVideo();
+		videoNaoSalvo.setCategoria(null);
+		Video novoVideo = videoService.salvar(videoNaoSalvo);
 		verify(videoRepository).save(any());
 		compareVideo(videoSalvo, novoVideo);
 	}
@@ -123,11 +137,30 @@ public class VideoServiceTest {
 		verify(videoRepository, times(0)).deleteById(any());
 	}
 
+	@Test
+	void testBuscaPorCategoria() {
+		Short id = 1;
+		when(videoRepository.findByCategoriaId(id)).thenReturn(List.of(createVideo()));
+		List<Video> videos = videoService.buscaPorCategoria(id);
+		verify(videoRepository).findByCategoriaId(id);
+		assertEquals(1, videos.size());
+	}
+
+	@Test
+	void testBuscaPorCategoriaSemVideo() {
+		Short id = 1;
+		when(videoRepository.findByCategoriaId(id)).thenReturn(new ArrayList<>());
+		List<Video> videos = videoService.buscaPorCategoria(id);
+		verify(videoRepository).findByCategoriaId(id);
+		assertTrue(videos.isEmpty());
+	}
+
 	private Video createVideo() {
 		Video video = new Video();
 		video.setTitulo("Titulo test");
 		video.setDescricao("Descricao Test");
 		video.setUrl("Url Test");
+		video.setCategoria(new Categoria((short) 1));
 		return video;
 	}
 
@@ -136,6 +169,7 @@ public class VideoServiceTest {
 		assertEquals(videoEsperado.getDescricao(), videoAtual.getDescricao());
 		assertEquals(videoEsperado.getTitulo(), videoAtual.getTitulo());
 		assertEquals(videoEsperado.getUrl(), videoAtual.getUrl());
+		assertEquals(videoEsperado.getCategoria().getId(), videoAtual.getCategoria().getId());
 	}
 
 }

@@ -1,5 +1,7 @@
 package br.com.alura.challenge.repository;
 
+import java.util.List;
+
 import javax.transaction.Transactional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,4 +20,6 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
 	@Transactional
 	@Query("UPDATE Video SET ativo = false WHERE id = :id")
 	void deleteById(@Param("id") Long id);
+
+	List<Video> findByCategoriaId(Short idCategoria);
 }

@@ -10,4 +10,5 @@ public class CategoriaVO {
 	private String titulo;
 
 	private String cor;
+
 }

@@ -1,11 +1,15 @@
 package br.com.alura.challenge.domain.dto;
 
+import java.util.Objects;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import lombok.Data;
 
 import org.hibernate.validator.constraints.Length;
+
+import br.com.alura.challenge.domain.entity.Categoria;
 
 @Data
 public class VideoDTO {
@@ -24,4 +28,10 @@ public class VideoDTO {
 	@NotNull(message = "URL é obrigatório")
 	@Length(max = 100, message = "O tamanho máximo da url é de 100 caracteres")
 	private String url;
+
+	private Short categoriaId;
+
+	public Categoria getCategoria() {
+		return Objects.nonNull(categoriaId) ? new Categoria(categoriaId) : null;
+	}
 }

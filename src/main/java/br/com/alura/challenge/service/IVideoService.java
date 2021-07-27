@@ -16,4 +16,6 @@ public interface IVideoService {
 
 	void apagar(final Long id);
 
+	List<Video> buscaPorCategoria(final Short idCategoria);
+
 }

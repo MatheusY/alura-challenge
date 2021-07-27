@@ -10,6 +10,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import org.hibernate.annotations.Where;
@@ -23,6 +24,7 @@ import br.com.alura.challenge.constants.WhereConstant;
 @Getter
 @Setter
 @Where(clause = WhereConstant.ATIVO)
+@NoArgsConstructor
 public class Categoria extends DeletableEntity {
 
 	@Id
@@ -36,5 +38,9 @@ public class Categoria extends DeletableEntity {
 
 	@Column(name = "COR", length = 6, nullable = false)
 	private String cor;
+
+	public Categoria(Short id) {
+		this.id = id;
+	}
 
 }

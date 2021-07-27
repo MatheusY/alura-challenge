@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.alura.challenge.domain.dto.CategoriaDTO;
 import br.com.alura.challenge.domain.entity.Categoria;
 import br.com.alura.challenge.domain.vo.CategoriaVO;
+import br.com.alura.challenge.domain.vo.VideoVO;
 import br.com.alura.challenge.exception.InvalidKeyException;
 import br.com.alura.challenge.service.ICategoriaService;
+import br.com.alura.challenge.service.IVideoService;
 
 @RestController
 @RequestMapping("/categorias")
@@ -28,6 +30,9 @@ public class CategoriaController extends BaseController {
 
 	@Autowired
 	private ICategoriaService categoriaService;
+
+	@Autowired
+	private IVideoService videoService;
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
@@ -46,6 +51,12 @@ public class CategoriaController extends BaseController {
 	@ResponseStatus(HttpStatus.OK)
 	public CategoriaVO getById(@PathVariable Short id) {
 		return convert(categoriaService.buscaPorId(id), CategoriaVO.class);
+	}
+
+	@GetMapping("/{id}/videos")
+	@ResponseStatus(HttpStatus.OK)
+	public List<VideoVO> getVideosByCategoria(@PathVariable Short id) {
+		return convert(videoService.buscaPorCategoria(id), VideoVO.class);
 	}
 
 	@PutMapping("/{id}")

@@ -46,6 +46,12 @@ public class CategoriaService extends AbstractDeletableEntityService<Categoria> 
 		gravar(categoria);
 	}
 
+	@Override
+	public void apagar(Short id) {
+		verificaSeExiste(id);
+		categoriaRepository.deleteById(id);
+	}
+
 	private Categoria gravar(final Categoria categoria) throws InvalidKeyException {
 		ativar(categoria);
 		try {

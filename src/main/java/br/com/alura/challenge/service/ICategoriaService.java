@@ -14,4 +14,6 @@ public interface ICategoriaService {
 	Categoria buscaPorId(final Short id);
 
 	void atualiza(final Categoria categoria) throws InvalidKeyException;
+
+	void apagar(final Short id);
 }

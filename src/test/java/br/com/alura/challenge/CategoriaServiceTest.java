@@ -114,6 +114,20 @@ public class CategoriaServiceTest {
 		verify(categoriaRepository).save(categoria);
 	}
 
+	@Test
+	public void testApaga() {
+		when(categoriaRepository.existsById((short) 1)).thenReturn(true);
+		categoriaService.apagar((short) 1);
+		verify(categoriaRepository).deleteById((short) 1);
+	}
+
+	@Test
+	public void testApagaNaoEncontrado() {
+		when(categoriaRepository.existsById((short) 1)).thenReturn(false);
+		assertThrows(CategoriaNotFoundException.class, () -> categoriaService.apagar((short) 1));
+		verify(categoriaRepository, times(0)).deleteById(any());
+	}
+
 	private Categoria createCategoria() {
 		Categoria categoria = new Categoria();
 		categoria.setTitulo("Test titulo");

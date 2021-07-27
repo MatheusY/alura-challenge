@@ -9,8 +9,4 @@ public abstract class AbstractDeletableEntityService<E extends DeletableEntity> 
 		entity.setAtivo(true);
 	}
 
-	@SuppressWarnings("null")
-	protected void inativar(final E entity) {
-		entity.setAtivo(false);
-	}
 }

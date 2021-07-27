@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,5 +38,11 @@ public class CategoriaController extends BaseController {
 	@ResponseStatus(HttpStatus.OK)
 	public List<CategoriaVO> getAll() {
 		return convert(categoriaService.buscaTodos(), CategoriaVO.class);
+	}
+
+	@GetMapping("{id}")
+	@ResponseStatus(HttpStatus.OK)
+	public CategoriaVO getById(@PathVariable Short id) {
+		return convert(categoriaService.buscaPorId(id), CategoriaVO.class);
 	}
 }

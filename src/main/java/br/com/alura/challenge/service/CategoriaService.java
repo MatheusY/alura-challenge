@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import br.com.alura.challenge.domain.entity.Categoria;
+import br.com.alura.challenge.exception.CategoriaNotFoundException;
 import br.com.alura.challenge.exception.InvalidKeyException;
 import br.com.alura.challenge.repository.CategoriaRepository;
 
@@ -25,7 +26,7 @@ public class CategoriaService extends AbstractDeletableEntityService<Categoria> 
 	}
 
 	@Override
-	public Categoria salvar(Categoria categoria) throws InvalidKeyException {
+	public Categoria salvar(final Categoria categoria) throws InvalidKeyException {
 		ativar(categoria);
 		try {
 			return categoriaRepository.save(categoria);
@@ -37,6 +38,11 @@ public class CategoriaService extends AbstractDeletableEntityService<Categoria> 
 	@Override
 	public List<Categoria> buscaTodos() {
 		return categoriaRepository.findAll();
+	}
+
+	@Override
+	public Categoria buscaPorId(final Short id) {
+		return categoriaRepository.findById(id).orElseThrow(CategoriaNotFoundException::new);
 	}
 
 }

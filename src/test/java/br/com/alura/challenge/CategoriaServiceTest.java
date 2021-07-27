@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import br.com.alura.challenge.domain.entity.Categoria;
+import br.com.alura.challenge.exception.CategoriaNotFoundException;
 import br.com.alura.challenge.exception.InvalidKeyException;
 import br.com.alura.challenge.repository.CategoriaRepository;
 import br.com.alura.challenge.service.CategoriaService;
@@ -70,6 +72,20 @@ public class CategoriaServiceTest {
 		List<Categoria> categorias = categoriaService.buscaTodos();
 		verify(categoriaRepository).findAll();
 		assertTrue(categorias.isEmpty());
+	}
+
+	@Test
+	public void testBuscaPorId() {
+		when(categoriaRepository.findById((short) 1)).thenReturn(Optional.of(createCategoria()));
+		categoriaService.buscaPorId((short) 1);
+		verify(categoriaRepository).findById((short) 1);
+	}
+
+	@Test
+	public void testBuscaPorIdNaoEncontrado() {
+		when(categoriaRepository.findById((short) 1)).thenReturn(Optional.empty());
+		assertThrows(CategoriaNotFoundException.class, () -> categoriaService.buscaPorId((short) 1));
+		verify(categoriaRepository).findById((short) 1);
 	}
 
 	private Categoria createCategoria() {

@@ -10,4 +10,6 @@ public interface ICategoriaService {
 	Categoria salvar(final Categoria categoria) throws InvalidKeyException;
 
 	List<Categoria> buscaTodos();
+
+	Categoria buscaPorId(final Short id);
 }

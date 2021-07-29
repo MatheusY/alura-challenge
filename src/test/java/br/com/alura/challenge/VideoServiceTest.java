@@ -70,7 +70,7 @@ public class VideoServiceTest {
 	@Test
 	public void testBuscaTodos() {
 		when(videoRepository.findAll()).thenReturn(List.of(createVideo()));
-		List<Video> todos = videoService.buscarTodos();
+		List<Video> todos = videoService.buscarFiltro(any());
 		verify(videoRepository).findAll();
 		assertEquals(1, todos.size());
 	}
@@ -78,7 +78,7 @@ public class VideoServiceTest {
 	@Test
 	public void testBuscaTodosSemResultado() {
 		when(videoRepository.findAll()).thenReturn(new ArrayList<>());
-		List<Video> todos = videoService.buscarTodos();
+		List<Video> todos = videoService.buscarFiltro(any());
 		verify(videoRepository).findAll();
 		assertEquals(0, todos.size());
 	}

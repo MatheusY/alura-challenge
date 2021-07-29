@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 import br.com.alura.challenge.domain.entity.Video;
 
 @Repository
-public interface VideoRepository extends JpaRepository<Video, Long> {
+public interface VideoRepository extends JpaRepository<Video, Long>, VideoRepositoryCustom {
 
 	@Override
 	@Modifying
@@ -22,4 +22,5 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
 	void deleteById(@Param("id") Long id);
 
 	List<Video> findByCategoriaId(Short idCategoria);
+
 }

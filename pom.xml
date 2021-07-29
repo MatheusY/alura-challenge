@@ -69,6 +69,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-jpamodelgen</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
@@ -89,6 +94,9 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+					<compilerArguments>
+						<processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+					</compilerArguments>
 				</configuration>
 			</plugin>
 		</plugins>

@@ -23,8 +23,8 @@ public class VideoService implements IVideoService {
 	}
 
 	@Override
-	public List<Video> buscarTodos() {
-		return videoRepository.findAll();
+	public List<Video> buscarFiltro(final String search) {
+		return videoRepository.findByFiltro(search);
 	}
 
 	@Override

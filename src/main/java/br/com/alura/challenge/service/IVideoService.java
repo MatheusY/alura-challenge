@@ -8,7 +8,7 @@ public interface IVideoService {
 
 	Video salvar(final Video video);
 
-	List<Video> buscarTodos();
+	List<Video> buscarFiltro(String search);
 
 	Video buscarPorId(final Long id);
 

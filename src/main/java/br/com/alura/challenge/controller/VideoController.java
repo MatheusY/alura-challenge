@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.alura.challenge.domain.dto.VideoDTO;
 import br.com.alura.challenge.domain.entity.Video;
 import br.com.alura.challenge.domain.vo.VideoVO;
+import br.com.alura.challenge.exception.InvalidKeyException;
 import br.com.alura.challenge.service.IVideoService;
 
 @RestController
@@ -31,7 +32,7 @@ public class VideoController extends BaseController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public Long save(@RequestBody @Valid VideoDTO videoDto) {
+	public Long save(@RequestBody @Valid VideoDTO videoDto) throws InvalidKeyException {
 		Video video = videoService.salvar(convert(videoDto, Video.class));
 		return video.getId();
 	}
@@ -50,7 +51,7 @@ public class VideoController extends BaseController {
 
 	@PutMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void update(@PathVariable Long id, @RequestBody @Valid VideoDTO videoDTO) {
+	public void update(@PathVariable Long id, @RequestBody @Valid VideoDTO videoDTO) throws InvalidKeyException {
 		Video video = convert(videoDTO, Video.class);
 		video.setId(id);
 		videoService.atualiza(video);

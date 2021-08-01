@@ -1,24 +1,35 @@
 package br.com.alura.challenge.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.stereotype.Service;
 
-import br.com.alura.challenge.domain.entity.Categoria;
 import br.com.alura.challenge.domain.entity.Video;
+import br.com.alura.challenge.exception.InvalidKeyException;
 import br.com.alura.challenge.exception.VideoNotFoundException;
+import br.com.alura.challenge.repository.CategoriaRepository;
 import br.com.alura.challenge.repository.VideoRepository;
 
 @Service
 public class VideoService implements IVideoService {
 
+	private static final String CATEGORIA_LIVRE = "Livre";
+
 	@Autowired
 	private VideoRepository videoRepository;
+	
+	@Autowired
+	private CategoriaRepository categoriaRepository;
+
+	private static Map<String, String> mensagens = new HashMap<>();
 
 	@Override
-	public Video salvar(final Video video) {
+	public Video salvar(final Video video) throws InvalidKeyException {
 		return gravar(video);
 	}
 
@@ -33,7 +44,7 @@ public class VideoService implements IVideoService {
 	}
 
 	@Override
-	public void atualiza(final Video video) {
+	public void atualiza(final Video video) throws InvalidKeyException {
 		verificaSeExiste(video.getId());
 		gravar(video);
 	}
@@ -55,11 +66,15 @@ public class VideoService implements IVideoService {
 		}
 	}
 
-	private Video gravar(final Video video) {
+	private Video gravar(final Video video) throws InvalidKeyException {
 		video.setAtivo(true);
 		if (Objects.isNull(video.getCategoria())) {
-			video.setCategoria(new Categoria((short) 1));
+			video.setCategoria(categoriaRepository.findByTituloIgnoreCase(CATEGORIA_LIVRE));
 		}
-		return videoRepository.save(video);
+		try {
+			return videoRepository.save(video);
+		} catch (JpaObjectRetrievalFailureException e) {
+			throw new InvalidKeyException(e, mensagens);
+		}
 	}
 }

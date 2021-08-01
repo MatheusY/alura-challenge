@@ -1,4 +1,4 @@
-package br.com.alura.challenge;
+package br.com.alura.challenge.service;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;

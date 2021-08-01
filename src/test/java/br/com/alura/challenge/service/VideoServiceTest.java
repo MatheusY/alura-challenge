@@ -1,4 +1,4 @@
-package br.com.alura.challenge;
+package br.com.alura.challenge.service;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,26 +12,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 
 import br.com.alura.challenge.domain.entity.Categoria;
 import br.com.alura.challenge.domain.entity.Video;
+import br.com.alura.challenge.exception.InvalidKeyException;
 import br.com.alura.challenge.exception.VideoNotFoundException;
+import br.com.alura.challenge.repository.CategoriaRepository;
 import br.com.alura.challenge.repository.VideoRepository;
-import br.com.alura.challenge.service.VideoService;
 
 public class VideoServiceTest {
+
+	private static final JpaObjectRetrievalFailureException JPA_EXCEPTION = new JpaObjectRetrievalFailureException(new EntityNotFoundException("e\"erro\""));
 
 	@InjectMocks
 	private VideoService videoService;
 
 	@Mock
 	private VideoRepository videoRepository;
+	
+	@Mock
+	private CategoriaRepository categoriaRepository;
 
 	@BeforeEach
 	void beforeEach() {
@@ -39,7 +47,7 @@ public class VideoServiceTest {
 	}
 
 	@Test
-	public void testSalvarVideo() {
+	public void testSalvarVideo() throws InvalidKeyException {
 		Video videoSalvo = createVideo();
 		videoSalvo.setId(1L);
 		when(videoRepository.save(any())).thenReturn(videoSalvo);
@@ -49,10 +57,11 @@ public class VideoServiceTest {
 	}
 
 	@Test
-	public void testSalvarVideoSemCategoria() {
+	public void testSalvarVideoSemCategoria() throws InvalidKeyException {
 		Video videoSalvo = createVideo();
 		videoSalvo.setId(1L);
 		when(videoRepository.save(any())).thenReturn(videoSalvo);
+		when(categoriaRepository.findByTituloIgnoreCase(any())).thenReturn(new Categoria((short) 1));
 		Video videoNaoSalvo = createVideo();
 		videoNaoSalvo.setCategoria(null);
 		Video novoVideo = videoService.salvar(videoNaoSalvo);
@@ -62,16 +71,16 @@ public class VideoServiceTest {
 
 	@Test
 	public void testErroSalvar() {
-		when(videoRepository.save(any())).thenThrow(DataIntegrityViolationException.class);
-		assertThrows(DataIntegrityViolationException.class, () -> videoService.salvar(createVideo()));
+		when(videoRepository.save(any())).thenThrow(JPA_EXCEPTION);
+		assertThrows(InvalidKeyException.class, () -> videoService.salvar(createVideo()));
 		verify(videoRepository).save(any());
 	}
 
 	@Test
 	public void testBuscaTodos() {
-		when(videoRepository.findAll()).thenReturn(List.of(createVideo()));
+		when(videoRepository.findByFiltro(any())).thenReturn(List.of(createVideo()));
 		List<Video> todos = videoService.buscarFiltro(any());
-		verify(videoRepository).findAll();
+		verify(videoRepository).findByFiltro(any());
 		assertEquals(1, todos.size());
 	}
 
@@ -79,7 +88,7 @@ public class VideoServiceTest {
 	public void testBuscaTodosSemResultado() {
 		when(videoRepository.findAll()).thenReturn(new ArrayList<>());
 		List<Video> todos = videoService.buscarFiltro(any());
-		verify(videoRepository).findAll();
+		verify(videoRepository).findByFiltro(any());
 		assertEquals(0, todos.size());
 	}
 
@@ -101,7 +110,7 @@ public class VideoServiceTest {
 	}
 
 	@Test
-	void testAtualiza() {
+	void testAtualiza() throws InvalidKeyException {
 		Video video = createVideo();
 		video.setId(1L);
 		when(videoRepository.existsById(1L)).thenReturn(true);
@@ -161,6 +170,7 @@ public class VideoServiceTest {
 		video.setDescricao("Descricao Test");
 		video.setUrl("Url Test");
 		video.setCategoria(new Categoria((short) 1));
+		video.setAtivo(true);
 		return video;
 	}
 

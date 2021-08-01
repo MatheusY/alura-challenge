@@ -17,4 +17,6 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Short> {
 	@Query("UPDATE Categoria SET ativo = false WHERE id = :id")
 	void deleteById(@Param("id") Short id);
 
+	Categoria findByTituloIgnoreCase(String titulo);
+
 }

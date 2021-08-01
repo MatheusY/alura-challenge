@@ -1,5 +1,7 @@
 package br.com.alura.challenge.domain.entity;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -23,7 +25,9 @@ import br.com.alura.challenge.constants.WhereConstant;
 @Entity
 @Table(name = "TB_VIDEO")
 @Where(clause = WhereConstant.ATIVO)
-public class Video extends DeletableEntity {
+public class Video extends DeletableEntity implements Serializable {
+
+	private static final long serialVersionUID = -5037749762754390237L;
 
 	@Id
 	@Column(name = "ID")

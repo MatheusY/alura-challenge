@@ -9,9 +9,12 @@ import lombok.Data;
 
 import org.hibernate.validator.constraints.Length;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import br.com.alura.challenge.domain.entity.Categoria;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VideoDTO {
 
 	@Valid

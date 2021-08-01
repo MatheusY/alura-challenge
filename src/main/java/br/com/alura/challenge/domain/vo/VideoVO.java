@@ -1,5 +1,7 @@
 package br.com.alura.challenge.domain.vo;
 
+import java.util.Objects;
+
 import lombok.Data;
 
 import br.com.alura.challenge.domain.entity.Categoria;
@@ -18,6 +20,6 @@ public class VideoVO {
 	private Short categoriaId;
 
 	public void setCategoria(Categoria categoria) {
-		categoriaId = categoria.getId();
+		categoriaId = Objects.nonNull(categoria) ? categoria.getId() : null;
 	}
 }

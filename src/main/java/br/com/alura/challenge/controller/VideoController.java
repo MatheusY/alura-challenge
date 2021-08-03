@@ -1,10 +1,10 @@
 package br.com.alura.challenge.controller;
 
-import java.util.List;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,8 +39,8 @@ public class VideoController extends BaseController {
 
 	@GetMapping
 	@ResponseStatus(HttpStatus.OK)
-	public List<VideoVO> get(@RequestParam(required = false) String search) {
-		return convert(videoService.buscarFiltro(search), VideoVO.class);
+	public Page<VideoVO> get(@RequestParam(required = false) String search, Pageable pageable) {
+		return convert(videoService.buscarFiltro(search, pageable), VideoVO.class);
 	}
 
 	@GetMapping("/{id}")

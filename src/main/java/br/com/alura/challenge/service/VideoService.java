@@ -1,11 +1,12 @@
 package br.com.alura.challenge.service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.stereotype.Service;
 
@@ -34,8 +35,8 @@ public class VideoService implements IVideoService {
 	}
 
 	@Override
-	public List<Video> buscarFiltro(final String search) {
-		return videoRepository.findByFiltro(search);
+	public Page<Video> buscarFiltro(final String search, final Pageable pageable) {
+		return videoRepository.findByFiltro(search, pageable);
 	}
 
 	@Override
@@ -56,8 +57,8 @@ public class VideoService implements IVideoService {
 	}
 
 	@Override
-	public List<Video> buscaPorCategoria(final Short idCategoria) {
-		return videoRepository.findByCategoriaId(idCategoria);
+	public Page<Video> buscaPorCategoria(final Short idCategoria, final Pageable pageable) {
+		return videoRepository.findByCategoriaId(idCategoria, pageable);
 	}
 
 	private void verificaSeExiste(final Long id) {

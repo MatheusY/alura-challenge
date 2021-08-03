@@ -1,10 +1,11 @@
 package br.com.alura.challenge.controller;
 
-import java.util.List;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,8 +44,8 @@ public class CategoriaController extends BaseController {
 
 	@GetMapping
 	@ResponseStatus(HttpStatus.OK)
-	public List<CategoriaVO> getAll() {
-		return convert(categoriaService.buscaTodos(), CategoriaVO.class);
+	public Page<CategoriaVO> getAll(Pageable pageable) {
+		return convert(categoriaService.buscaTodos(pageable), CategoriaVO.class);
 	}
 
 	@GetMapping("/{id}")
@@ -55,8 +56,8 @@ public class CategoriaController extends BaseController {
 
 	@GetMapping("/{id}/videos")
 	@ResponseStatus(HttpStatus.OK)
-	public List<VideoVO> getVideosByCategoria(@PathVariable Short id) {
-		return convert(videoService.buscaPorCategoria(id), VideoVO.class);
+	public Page<VideoVO> getVideosByCategoria(@PathVariable Short id, Pageable pageable) {
+		return convert(videoService.buscaPorCategoria(id, pageable), VideoVO.class);
 	}
 
 	@PutMapping("/{id}")

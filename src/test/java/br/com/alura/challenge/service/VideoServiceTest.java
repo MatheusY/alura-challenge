@@ -19,6 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 
 import br.com.alura.challenge.domain.entity.Categoria;
@@ -78,18 +82,20 @@ public class VideoServiceTest {
 
 	@Test
 	public void testBuscaTodos() {
-		when(videoRepository.findByFiltro(any())).thenReturn(List.of(createVideo()));
-		List<Video> todos = videoService.buscarFiltro(any());
-		verify(videoRepository).findByFiltro(any());
-		assertEquals(1, todos.size());
+		Pageable pageable = PageRequest.of(0, 1);
+		when(videoRepository.findByFiltro(null, pageable)).thenReturn(new PageImpl<>(List.of(createVideo()), pageable, 1));
+		Page<Video> todos = videoService.buscarFiltro(null, pageable);
+		verify(videoRepository).findByFiltro(null, pageable);
+		assertEquals(1, todos.getContent().size());
 	}
 
 	@Test
 	public void testBuscaTodosSemResultado() {
-		when(videoRepository.findAll()).thenReturn(new ArrayList<>());
-		List<Video> todos = videoService.buscarFiltro(any());
-		verify(videoRepository).findByFiltro(any());
-		assertEquals(0, todos.size());
+		Pageable pageable = PageRequest.of(0, 1);
+		when(videoRepository.findByFiltro("a", pageable)).thenReturn(new PageImpl<>(new ArrayList<>(), pageable, 0));
+		Page<Video> todos = videoService.buscarFiltro("a", pageable);
+		verify(videoRepository).findByFiltro("a", pageable);
+		assertTrue(todos.isEmpty());
 	}
 
 	@Test
@@ -148,19 +154,21 @@ public class VideoServiceTest {
 
 	@Test
 	void testBuscaPorCategoria() {
+		Pageable pageable = PageRequest.of(0, 1);
 		Short id = 1;
-		when(videoRepository.findByCategoriaId(id)).thenReturn(List.of(createVideo()));
-		List<Video> videos = videoService.buscaPorCategoria(id);
-		verify(videoRepository).findByCategoriaId(id);
-		assertEquals(1, videos.size());
+		when(videoRepository.findByCategoriaId(id, pageable)).thenReturn(new PageImpl<>(List.of(createVideo()),pageable, 1));
+		Page<Video> videos = videoService.buscaPorCategoria(id, pageable);
+		verify(videoRepository).findByCategoriaId(id, pageable);
+		assertEquals(1, videos.getContent().size());
 	}
 
 	@Test
 	void testBuscaPorCategoriaSemVideo() {
+		Pageable pageable = PageRequest.of(0, 1);
 		Short id = 1;
-		when(videoRepository.findByCategoriaId(id)).thenReturn(new ArrayList<>());
-		List<Video> videos = videoService.buscaPorCategoria(id);
-		verify(videoRepository).findByCategoriaId(id);
+		when(videoRepository.findByCategoriaId(id, pageable)).thenReturn(new PageImpl<>(new ArrayList<>(), pageable, 0));
+		Page<Video> videos = videoService.buscaPorCategoria(id, pageable);
+		verify(videoRepository).findByCategoriaId(id, pageable);
 		assertTrue(videos.isEmpty());
 	}
 

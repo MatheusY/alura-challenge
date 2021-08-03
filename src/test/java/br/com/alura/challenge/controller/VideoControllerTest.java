@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import br.com.alura.challenge.domain.dto.VideoDTO;
 import br.com.alura.challenge.domain.entity.Categoria;
 import br.com.alura.challenge.domain.entity.FieldError;
+import br.com.alura.challenge.domain.entity.RestResponsePage;
 import br.com.alura.challenge.domain.entity.Video;
 import br.com.alura.challenge.domain.vo.ErrorResponse;
 import br.com.alura.challenge.domain.vo.VideoVO;
@@ -55,79 +58,106 @@ public class VideoControllerTest extends AbstractControllerTest {
 			@Test
 			@DisplayName("Busca sem parametro trazendo um video")
 			public void testGet() {
+				Pageable pageable = PageRequest.of(0, 3);
 				List<Video> videos = createVideos();
 				StringBuilder url = new StringBuilder(VIDEO_BASE_URL);
-				ParameterizedTypeReference<List<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
-				ResponseEntity<List<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
+				url.append(String.format("?page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				
+				ParameterizedTypeReference<RestResponsePage<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
+				ResponseEntity<RestResponsePage<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
 
 				assertResponseGet(responseGet);
-				assertVideos(convert(videos, VideoVO.class), responseGet.getBody());
+				assertPage(responseGet, pageable, videos.size());
+				assertVideos(convert(videos, VideoVO.class), responseGet.getBody().getContent());
 			}
 
 			@Test
 			@DisplayName("Busca sem parametro sem trazer nenhum resultado")
 			public void testGetNoResults() {
+				Pageable pageable = PageRequest.of(0, 3);
 				StringBuilder url = new StringBuilder(VIDEO_BASE_URL);
-				ParameterizedTypeReference<List<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
-				ResponseEntity<List<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
+				url.append(String.format("?page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
+				ResponseEntity<RestResponsePage<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
 
 				assertResponseGet(responseGet);
-				assertThat(responseGet.getBody(), hasSize(0));
+				assertPage(responseGet, pageable, 0);
+				assertThat(responseGet.getBody().getContent(), hasSize(0));
 			}
 
 			@Test
-			@DisplayName("Busca sem parametro trazendo mais de um video")
-			public void testGetMoreVideos() {
+			@DisplayName("Busca sem parametro trazendo mais de uma pagina")
+			public void testGetMoreVideosPages() {
+				Pageable pageable = PageRequest.of(0, 2);
 				List<Video> videos = createVideos();
 				videos.add(createVideo());
+				videos.add(createVideo());
 				StringBuilder url = new StringBuilder(VIDEO_BASE_URL);
-				ParameterizedTypeReference<List<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
-				ResponseEntity<List<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
+				url.append(String.format("?page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
+				ResponseEntity<RestResponsePage<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
 
 				assertResponseGet(responseGet);
-				assertVideos(convert(videos, VideoVO.class), responseGet.getBody());
+				assertPage(responseGet, pageable, videos.size());
+				videos.remove(2);
+				assertVideos(convert(videos, VideoVO.class), responseGet.getBody().getContent());
 			}
 
 			@Test
 			@DisplayName("Busca com parametro do titulo trazendo video")
 			public void testGetByFiltro() {
+				Pageable pageable = PageRequest.of(0, 3);
 				List<Video> videos = createVideos();
 				createVideo();
 				StringBuilder url = new StringBuilder(VIDEO_BASE_URL);
 				url.append("?search=").append(videos.get(0).getTitulo());
-				ParameterizedTypeReference<List<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
-				ResponseEntity<List<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
+				url.append(String.format("&page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
+				ResponseEntity<RestResponsePage<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
 
 				assertResponseGet(responseGet);
-				assertVideos(convert(videos, VideoVO.class), responseGet.getBody());
+				assertPage(responseGet, pageable, videos.size());
+				assertVideos(convert(videos, VideoVO.class), responseGet.getBody().getContent());
 			}
 
 			@Test
 			@DisplayName("Busca com parametro apenas com o começo do titulo trazendo video")
 			public void testGetByFiltroStartsWith() {
+				Pageable pageable = PageRequest.of(0, 3);
 				List<Video> videos = createVideos();
 				createVideo();
 				StringBuilder url = new StringBuilder(VIDEO_BASE_URL);
 				url.append("?search=").append(videos.get(0).getTitulo().substring(0, 10));
-				ParameterizedTypeReference<List<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
-				ResponseEntity<List<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
+				url.append(String.format("&page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
+				ResponseEntity<RestResponsePage<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
 
 				assertResponseGet(responseGet);
-				assertVideos(convert(videos, VideoVO.class), responseGet.getBody());
+				assertPage(responseGet, pageable, videos.size());
+				assertVideos(convert(videos, VideoVO.class), responseGet.getBody().getContent());
 			}
 
 			@Test
 			@DisplayName("Busca com parametro apenas com o final do titulo trazendo video")
 			public void testGetByFiltroEndWith() {
+				Pageable pageable = PageRequest.of(0, 3);
 				List<Video> videos = createVideos();
 				createVideo();
 				StringBuilder url = new StringBuilder(VIDEO_BASE_URL);
 				url.append("?search=").append(videos.get(0).getTitulo().substring(10));
-				ParameterizedTypeReference<List<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
-				ResponseEntity<List<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
+				url.append(String.format("&page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<VideoVO>> responseType = new ParameterizedTypeReference<>() {};
+				ResponseEntity<RestResponsePage<VideoVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
 
 				assertResponseGet(responseGet);
-				assertVideos(convert(videos, VideoVO.class), responseGet.getBody());
+				assertPage(responseGet, pageable, videos.size());
+				assertVideos(convert(videos, VideoVO.class), responseGet.getBody().getContent());
 			}
 
 			@Test
@@ -412,11 +442,17 @@ public class VideoControllerTest extends AbstractControllerTest {
 	}
 
 	private void assertVideo(VideoVO expected, VideoVO actual) {
-		assertEquals(expected.getCategoriaId(), actual.getCategoriaId());
-		assertEquals(expected.getDescricao(), actual.getDescricao());
-		assertEquals(expected.getId(), actual.getId());
-		assertEquals(expected.getTitulo(), actual.getTitulo());
-		assertEquals(expected.getUrl(), actual.getUrl());
+		assertThat(actual.getCategoriaId(), equalTo(expected.getCategoriaId()));
+		assertThat(actual.getDescricao(), equalTo(expected.getDescricao()));
+		assertThat(actual.getId(), equalTo(expected.getId()));
+		assertThat(actual.getTitulo(), equalTo(expected.getTitulo()));
+		assertThat(actual.getUrl(), equalTo(expected.getUrl()));
+	}
+	
+	private void assertPage(ResponseEntity<RestResponsePage<VideoVO>> responseGet, Pageable pageable, long totalElements) {
+		assertEquals(responseGet.getBody().getSize(), pageable.getPageSize());
+		assertEquals(responseGet.getBody().getNumber(), pageable.getPageNumber());
+		assertThat(responseGet.getBody().getTotalElements(), equalTo(totalElements));
 	}
 
 	private void assertResponseError(ResponseEntity<ErrorResponse> response, HttpStatus httpStatus) {

@@ -1,9 +1,9 @@
 package br.com.alura.challenge.repository;
 
-import java.util.List;
-
 import javax.transaction.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,6 +21,6 @@ public interface VideoRepository extends JpaRepository<Video, Long>, VideoReposi
 	@Query("UPDATE Video SET ativo = false WHERE id = :id")
 	void deleteById(@Param("id") Long id);
 
-	List<Video> findByCategoriaId(Short idCategoria);
+	Page<Video> findByCategoriaId(Short idCategoria, Pageable pageable);
 
 }

@@ -1,11 +1,12 @@
 package br.com.alura.challenge.service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.com.alura.challenge.domain.entity.Categoria;
@@ -31,8 +32,8 @@ public class CategoriaService extends AbstractDeletableEntityService<Categoria> 
 	}
 
 	@Override
-	public List<Categoria> buscaTodos() {
-		return categoriaRepository.findAll();
+	public Page<Categoria> buscaTodos(final Pageable pageable) {
+		return categoriaRepository.findAll(pageable);
 	}
 
 	@Override

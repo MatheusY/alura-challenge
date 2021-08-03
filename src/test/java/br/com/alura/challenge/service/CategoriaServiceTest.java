@@ -18,12 +18,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import br.com.alura.challenge.domain.entity.Categoria;
 import br.com.alura.challenge.exception.CategoriaNotFoundException;
 import br.com.alura.challenge.exception.InvalidKeyException;
 import br.com.alura.challenge.repository.CategoriaRepository;
-import br.com.alura.challenge.service.CategoriaService;
 
 public class CategoriaServiceTest {
 
@@ -61,17 +64,19 @@ public class CategoriaServiceTest {
 
 	@Test
 	public void testBuscaTodos() {
-		when(categoriaRepository.findAll()).thenReturn(List.of(createCategoria()));
-		List<Categoria> categorias = categoriaService.buscaTodos();
-		verify(categoriaRepository).findAll();
-		assertEquals(1, categorias.size());
+		Pageable pageable = PageRequest.of(0, 1);
+		when(categoriaRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(createCategoria()), pageable, 1));
+		Page<Categoria> categorias = categoriaService.buscaTodos(pageable);
+		verify(categoriaRepository).findAll(pageable);
+		assertEquals(1, categorias.getContent().size());
 	}
 
 	@Test
 	public void testBuscaTodosSemResultado() {
-		when(categoriaRepository.findAll()).thenReturn(new ArrayList<>());
-		List<Categoria> categorias = categoriaService.buscaTodos();
-		verify(categoriaRepository).findAll();
+		Pageable pageable = PageRequest.of(0, 1);
+		when(categoriaRepository.findAll(pageable)).thenReturn(new PageImpl<>(new ArrayList<>(), pageable, 0));
+		Page<Categoria> categorias = categoriaService.buscaTodos(pageable);
+		verify(categoriaRepository).findAll(pageable);
 		assertTrue(categorias.isEmpty());
 	}
 

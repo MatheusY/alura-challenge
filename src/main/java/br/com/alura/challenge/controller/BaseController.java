@@ -1,10 +1,11 @@
 package br.com.alura.challenge.controller;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
 public abstract class BaseController {
 
@@ -15,8 +16,10 @@ public abstract class BaseController {
 		return modelMapper.map(entity, clazz);
 	}
 
-	protected <E, D> List<D> convert(final List<E> entities, Class<D> clazz) {
-		return entities.stream().map(entity -> convert(entity, clazz)).collect(Collectors.toList());
+	protected <E, D> Page<D> convert(final Page<E> page, Class<D> clazz) {
+		return new PageImpl<>(
+				page.getContent().stream().map(entity -> convert(entity, clazz)).collect(Collectors.toList()),
+				page.getPageable(), page.getTotalElements());
 	}
 
 }

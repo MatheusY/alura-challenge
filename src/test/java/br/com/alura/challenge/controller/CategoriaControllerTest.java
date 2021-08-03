@@ -5,18 +5,22 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.ClassRule;
+import org.eclipse.jdt.annotation.NonNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,25 +28,25 @@ import org.springframework.http.ResponseEntity;
 import br.com.alura.challenge.domain.dto.CategoriaDTO;
 import br.com.alura.challenge.domain.entity.Categoria;
 import br.com.alura.challenge.domain.entity.FieldError;
+import br.com.alura.challenge.domain.entity.RestResponsePage;
+import br.com.alura.challenge.domain.entity.Video;
 import br.com.alura.challenge.domain.vo.CategoriaVO;
 import br.com.alura.challenge.domain.vo.ErrorResponse;
+import br.com.alura.challenge.domain.vo.VideoVO;
 import br.com.alura.challenge.repository.CategoriaRepository;
+import br.com.alura.challenge.repository.VideoRepository;
 
 public class CategoriaControllerTest extends AbstractControllerTest {
-
-	@ClassRule
-	//	public static PostgreSQLContainer postgreSQLContainer = BaeldungPostgresqlContainer.getInstance();
 
 	private static final String CATEGORIA_BASE_URL = RESOURCE_BASE_URL + "categorias/";
 
 	private static final String MSG_TITULO_CADASTRADO = "Categoria com o título já cadastrado!";
 
-	//	static {
-	//		postgreSQLContainer.start();
-	//	}
-
 	@Autowired
 	private CategoriaRepository categoriaRepository;
+
+	@Autowired
+	private VideoRepository videoRepository;
 
 	@Nested
 	@DisplayName("GET")
@@ -55,36 +59,55 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 			@Test
 			@DisplayName("Busca todos trazendo uma categoria")
 			public void testGet() {
+				Pageable pageable = PageRequest.of(0, 3);
 				List<Categoria> categorias = List.of(createCategoria());
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL);
-				ParameterizedTypeReference<List<CategoriaVO>> responseType = new ParameterizedTypeReference<>() {};
-				ResponseEntity<List<CategoriaVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
+				url.append(String.format("?page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<CategoriaVO>> responseType = new ParameterizedTypeReference<>() {
+				};
+				ResponseEntity<RestResponsePage<CategoriaVO>> responseGet = restTemplate.exchange(url.toString(),
+						HttpMethod.GET, getRequestEntity(), responseType);
 
 				assertResponseGet(responseGet);
-				assertCategorias(convert(categorias, CategoriaVO.class), responseGet.getBody());
+				assertPage(responseGet, pageable, categorias.size());
+				assertCategorias(convert(categorias, CategoriaVO.class), responseGet.getBody().getContent());
 			}
 
 			@Test
 			@DisplayName("Busca todos trazendo mais de uma categoria")
 			public void testGetNoResults() {
+				Pageable pageable = PageRequest.of(0, 3);
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL);
-				ParameterizedTypeReference<List<CategoriaVO>> responseType = new ParameterizedTypeReference<>() {};
-				ResponseEntity<List<CategoriaVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
+				url.append(String.format("?page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<CategoriaVO>> responseType = new ParameterizedTypeReference<>() {
+				};
+				ResponseEntity<RestResponsePage<CategoriaVO>> responseGet = restTemplate.exchange(url.toString(),
+						HttpMethod.GET, getRequestEntity(), responseType);
 
 				assertResponseGet(responseGet);
-				assertThat(responseGet.getBody(), hasSize(0));
+				assertPage(responseGet, pageable, 0);
+				assertThat(responseGet.getBody().getContent(), hasSize(0));
 			}
 
 			@Test
-			@DisplayName("Busca todos trazendo mais de uma categoria")
-			public void testGetMoreCategorias() {
-				List<Categoria> categorias = List.of(createCategoria(), createCategoria());
+			@DisplayName("Busca todos trazendo mais de uma pagina de categoria")
+			public void testGetMoreCategoriasPages() {
+				Pageable pageable = PageRequest.of(0, 2);
+				List<Categoria> categorias = new ArrayList<>(List.of(createCategoria(), createCategoria(), createCategoria()));
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL);
-				ParameterizedTypeReference<List<CategoriaVO>> responseType = new ParameterizedTypeReference<>() {};
-				ResponseEntity<List<CategoriaVO>> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), responseType);
+				url.append(String.format("?page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<CategoriaVO>> responseType = new ParameterizedTypeReference<>() {
+				};
+				ResponseEntity<RestResponsePage<CategoriaVO>> responseGet = restTemplate.exchange(url.toString(),
+						HttpMethod.GET, getRequestEntity(), responseType);
 
 				assertResponseGet(responseGet);
-				assertCategorias(convert(categorias, CategoriaVO.class), responseGet.getBody());
+				assertPage(responseGet, pageable, categorias.size());
+				categorias.remove(2);
+				assertCategorias(convert(categorias, CategoriaVO.class), responseGet.getBody().getContent());
 			}
 
 			@Test
@@ -92,10 +115,77 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 			public void testGetById() {
 				Categoria categoria = createCategoria();
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
-				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), CategoriaVO.class);
+				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET,
+						getRequestEntity(), CategoriaVO.class);
 
 				assertResponseGet(responseGet);
 				assertCategoria(convert(categoria, CategoriaVO.class), responseGet.getBody());
+			}
+
+			@Test
+			@DisplayName("Busca video por categoria")
+			public void testGetVideos() {
+				Pageable pageable = PageRequest.of(0, 3);
+				Categoria categoria = createCategoria();
+				Categoria categoria2 = createCategoria();
+				List<Video> videos = List.of(createVideo(categoria));
+				createVideo(categoria2);
+				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
+				url.append("/videos");
+				url.append(String.format("?page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<VideoVO>> responseType = new ParameterizedTypeReference<>() {
+				};
+				ResponseEntity<RestResponsePage<VideoVO>> responseGet = restTemplate.exchange(url.toString(),
+						HttpMethod.GET, getRequestEntity(), responseType);
+
+				assertResponseGet(responseGet);
+				assertPageVideos(responseGet, pageable, videos.size());
+				assertVideos(convert(videos, VideoVO.class), responseGet.getBody().getContent());
+			}
+
+			@Test
+			@DisplayName("Busca video por categoria quando não há video para a categoria")
+			public void testGetVideosWhenNotFound() {
+				Pageable pageable = PageRequest.of(0, 3);
+				Categoria categoria = createCategoria();
+				Categoria categoria2 = createCategoria();
+				createVideo(categoria2);
+				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
+				url.append("/videos");
+				url.append(String.format("?page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<VideoVO>> responseType = new ParameterizedTypeReference<>() {
+				};
+				ResponseEntity<RestResponsePage<VideoVO>> responseGet = restTemplate.exchange(url.toString(),
+						HttpMethod.GET, getRequestEntity(), responseType);
+
+				assertResponseGet(responseGet);
+				assertPageVideos(responseGet, pageable, 0);
+				assertTrue(responseGet.getBody().isEmpty());
+			}
+
+			@Test
+			@DisplayName("Busca video por categoria paginado")
+			public void testGetVideosPaginated() {
+				Pageable pageable = PageRequest.of(0, 2);
+				Categoria categoria = createCategoria();
+				Categoria categoria2 = createCategoria();
+				List<Video> videos = new ArrayList<>(List.of(createVideo(categoria), createVideo(categoria), createVideo(categoria)));
+				createVideo(categoria2);
+				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
+				url.append("/videos");
+				url.append(String.format("?page=%d", pageable.getPageNumber()));
+				url.append(String.format("&size=%d", pageable.getPageSize()));
+				ParameterizedTypeReference<RestResponsePage<VideoVO>> responseType = new ParameterizedTypeReference<>() {
+				};
+				ResponseEntity<RestResponsePage<VideoVO>> responseGet = restTemplate.exchange(url.toString(),
+						HttpMethod.GET, getRequestEntity(), responseType);
+
+				assertResponseGet(responseGet);
+				assertPageVideos(responseGet, pageable, videos.size());
+				videos.remove(2);
+				assertVideos(convert(videos, VideoVO.class), responseGet.getBody().getContent());
 			}
 		}
 
@@ -110,7 +200,8 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL);
 				url.append("/9999");
 
-				ResponseEntity<ErrorResponse> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), ErrorResponse.class);
+				ResponseEntity<ErrorResponse> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET,
+						getRequestEntity(), ErrorResponse.class);
 				assertResponseNotFound(responseGet);
 			}
 		}
@@ -130,14 +221,16 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				CategoriaDTO categoriaDTO = convert(buildCategoria(), CategoriaDTO.class);
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL);
 
-				ResponseEntity<Short> responsePost = restTemplate.exchange(url.toString(), HttpMethod.POST, getRequestEntity(categoriaDTO), Short.class);
+				ResponseEntity<Short> responsePost = restTemplate.exchange(url.toString(), HttpMethod.POST,
+						getRequestEntity(categoriaDTO), Short.class);
 
 				assertResponse(responsePost, HttpStatus.CREATED);
 				CategoriaVO categoriaVO = convert(categoriaDTO, CategoriaVO.class);
 				categoriaVO.setId(responsePost.getBody());
 
 				url.append("/").append(categoriaVO.getId());
-				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), CategoriaVO.class);
+				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET,
+						getRequestEntity(), CategoriaVO.class);
 
 				assertResponseGet(responseGet);
 				assertCategoria(categoriaVO, responseGet.getBody());
@@ -151,14 +244,16 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				categoriaDTO.setCor(categoriaCreated.getCor());
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL);
 
-				ResponseEntity<Short> responsePost = restTemplate.exchange(url.toString(), HttpMethod.POST, getRequestEntity(categoriaDTO), Short.class);
+				ResponseEntity<Short> responsePost = restTemplate.exchange(url.toString(), HttpMethod.POST,
+						getRequestEntity(categoriaDTO), Short.class);
 
 				assertResponse(responsePost, HttpStatus.CREATED);
 				CategoriaVO categoriaVO = convert(categoriaDTO, CategoriaVO.class);
 				categoriaVO.setId(responsePost.getBody());
 
 				url.append("/").append(categoriaVO.getId());
-				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), CategoriaVO.class);
+				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET,
+						getRequestEntity(), CategoriaVO.class);
 
 				assertResponseGet(responseGet);
 				assertCategoria(categoriaVO, responseGet.getBody());
@@ -175,7 +270,8 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				CategoriaDTO categoria = new CategoriaDTO();
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL);
 
-				ResponseEntity<ErrorResponse> responsePost = restTemplate.exchange(url.toString(), HttpMethod.POST, getRequestEntity(categoria), ErrorResponse.class);
+				ResponseEntity<ErrorResponse> responsePost = restTemplate.exchange(url.toString(), HttpMethod.POST,
+						getRequestEntity(categoria), ErrorResponse.class);
 
 				assertRequiredFields(responsePost);
 			}
@@ -188,7 +284,8 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				categoria.setTitulo(StringUtils.repeat('a', 31));
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL);
 
-				ResponseEntity<ErrorResponse> responsePost = restTemplate.exchange(url.toString(), HttpMethod.POST, getRequestEntity(categoria), ErrorResponse.class);
+				ResponseEntity<ErrorResponse> responsePost = restTemplate.exchange(url.toString(), HttpMethod.POST,
+						getRequestEntity(categoria), ErrorResponse.class);
 
 				assertInvalidFields(responsePost);
 			}
@@ -201,7 +298,8 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				categoriaDTO.setTitulo(categoriaCreated.getTitulo());
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL);
 
-				ResponseEntity<ErrorResponse> responsePost = restTemplate.exchange(url.toString(), HttpMethod.POST, getRequestEntity(categoriaDTO), ErrorResponse.class);
+				ResponseEntity<ErrorResponse> responsePost = restTemplate.exchange(url.toString(), HttpMethod.POST,
+						getRequestEntity(categoriaDTO), ErrorResponse.class);
 
 				assertResponse(responsePost, HttpStatus.BAD_REQUEST);
 				assertThat(responsePost.getBody().getMessage(), equalTo(MSG_TITULO_CADASTRADO));
@@ -224,13 +322,15 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				CategoriaDTO categoriaDTO = convert(buildCategoria(), CategoriaDTO.class);
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
 
-				ResponseEntity<Void> responsePut = restTemplate.exchange(url.toString(), HttpMethod.PUT, getRequestEntity(categoriaDTO), Void.class);
+				ResponseEntity<Void> responsePut = restTemplate.exchange(url.toString(), HttpMethod.PUT,
+						getRequestEntity(categoriaDTO), Void.class);
 
 				assertResponse(responsePut, HttpStatus.NO_CONTENT);
 				CategoriaVO categoriaVO = convert(categoriaDTO, CategoriaVO.class);
 				categoriaVO.setId(categoria.getId());
 
-				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), CategoriaVO.class);
+				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET,
+						getRequestEntity(), CategoriaVO.class);
 
 				assertResponseGet(responseGet);
 				assertCategoria(categoriaVO, responseGet.getBody());
@@ -245,13 +345,15 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				categoriaDTO.setCor(categoriaCreated.getCor());
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
 
-				ResponseEntity<Void> responsePut = restTemplate.exchange(url.toString(), HttpMethod.PUT, getRequestEntity(categoriaDTO), Void.class);
+				ResponseEntity<Void> responsePut = restTemplate.exchange(url.toString(), HttpMethod.PUT,
+						getRequestEntity(categoriaDTO), Void.class);
 
 				assertResponse(responsePut, HttpStatus.NO_CONTENT);
 				CategoriaVO categoriaVO = convert(categoriaDTO, CategoriaVO.class);
 				categoriaVO.setId(categoria.getId());
 
-				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), CategoriaVO.class);
+				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET,
+						getRequestEntity(), CategoriaVO.class);
 
 				assertResponseGet(responseGet);
 				assertCategoria(categoriaVO, responseGet.getBody());
@@ -269,7 +371,8 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				CategoriaDTO categoriaDTO = convert(buildCategoria(), CategoriaDTO.class);
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/9999");
 
-				ResponseEntity<ErrorResponse> responsePut = restTemplate.exchange(url.toString(), HttpMethod.PUT, getRequestEntity(categoriaDTO), ErrorResponse.class);
+				ResponseEntity<ErrorResponse> responsePut = restTemplate.exchange(url.toString(), HttpMethod.PUT,
+						getRequestEntity(categoriaDTO), ErrorResponse.class);
 
 				assertResponseNotFound(responsePut);
 			}
@@ -281,7 +384,8 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				CategoriaVO categoriaVazia = new CategoriaVO();
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
 
-				ResponseEntity<ErrorResponse> responsePut = restTemplate.exchange(url.toString(), HttpMethod.PUT, getRequestEntity(categoriaVazia), ErrorResponse.class);
+				ResponseEntity<ErrorResponse> responsePut = restTemplate.exchange(url.toString(), HttpMethod.PUT,
+						getRequestEntity(categoriaVazia), ErrorResponse.class);
 
 				assertRequiredFields(responsePut);
 			}
@@ -295,7 +399,8 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				categoriaDTO.setTitulo(StringUtils.repeat('a', 31));
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
 
-				ResponseEntity<ErrorResponse> responsePost = restTemplate.exchange(url.toString(), HttpMethod.PUT, getRequestEntity(categoriaDTO), ErrorResponse.class);
+				ResponseEntity<ErrorResponse> responsePost = restTemplate.exchange(url.toString(), HttpMethod.PUT,
+						getRequestEntity(categoriaDTO), ErrorResponse.class);
 
 				assertInvalidFields(responsePost);
 			}
@@ -309,7 +414,8 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				categoriaDTO.setTitulo(categoriaCreated.getTitulo());
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
 
-				ResponseEntity<ErrorResponse> responsePut = restTemplate.exchange(url.toString(), HttpMethod.PUT, getRequestEntity(categoriaDTO), ErrorResponse.class);
+				ResponseEntity<ErrorResponse> responsePut = restTemplate.exchange(url.toString(), HttpMethod.PUT,
+						getRequestEntity(categoriaDTO), ErrorResponse.class);
 
 				assertResponse(responsePut, HttpStatus.BAD_REQUEST);
 				assertThat(responsePut.getBody().getMessage(), equalTo(MSG_TITULO_CADASTRADO));
@@ -331,11 +437,13 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				Categoria categoria = createCategoria();
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
 
-				ResponseEntity<Void> responseDelete = restTemplate.exchange(url.toString(), HttpMethod.DELETE, getRequestEntity(), Void.class);
+				ResponseEntity<Void> responseDelete = restTemplate.exchange(url.toString(), HttpMethod.DELETE,
+						getRequestEntity(), Void.class);
 
 				assertResponse(responseDelete, HttpStatus.NO_CONTENT);
 
-				ResponseEntity<ErrorResponse> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), ErrorResponse.class);
+				ResponseEntity<ErrorResponse> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET,
+						getRequestEntity(), ErrorResponse.class);
 				assertResponseNotFound(responseGet);
 			}
 		}
@@ -350,12 +458,14 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 				Categoria categoria = createCategoria();
 				StringBuilder url = new StringBuilder(CATEGORIA_BASE_URL).append("/9999");
 
-				ResponseEntity<ErrorResponse> responseDelete = restTemplate.exchange(url.toString(), HttpMethod.DELETE, getRequestEntity(), ErrorResponse.class);
+				ResponseEntity<ErrorResponse> responseDelete = restTemplate.exchange(url.toString(), HttpMethod.DELETE,
+						getRequestEntity(), ErrorResponse.class);
 
 				assertResponseNotFound(responseDelete);
 
 				url = new StringBuilder(CATEGORIA_BASE_URL).append("/").append(categoria.getId());
-				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET, getRequestEntity(), CategoriaVO.class);
+				ResponseEntity<CategoriaVO> responseGet = restTemplate.exchange(url.toString(), HttpMethod.GET,
+						getRequestEntity(), CategoriaVO.class);
 				assertResponseGet(responseGet);
 			}
 		}
@@ -364,6 +474,7 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 
 	@AfterEach
 	private void afterEach() {
+		videoRepository.deleteAllInBatch();
 		categoriaRepository.deleteAllInBatch();
 	}
 
@@ -375,7 +486,9 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 	private void assertCategorias(List<CategoriaVO> expected, List<CategoriaVO> actual) {
 		assertEquals(expected.size(), actual.size());
 		for (CategoriaVO actualCategoria : actual) {
-			assertCategoria(expected.stream().filter(expectedCategoria -> expectedCategoria.getId().equals(actualCategoria.getId())).findFirst().orElse(new CategoriaVO()), actualCategoria);
+			assertCategoria(expected.stream()
+					.filter(expectedCategoria -> expectedCategoria.getId().equals(actualCategoria.getId())).findFirst()
+					.orElse(new CategoriaVO()), actualCategoria);
 		}
 
 	}
@@ -384,6 +497,37 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 		assertEquals(expected.getId(), actual.getId());
 		assertEquals(expected.getCor(), actual.getCor());
 		assertEquals(expected.getTitulo(), actual.getTitulo());
+	}
+
+	private void assertVideos(List<@NonNull VideoVO> expected, List<VideoVO> actual) {
+		assertEquals(expected.size(), actual.size());
+		for (VideoVO actualVideo : actual) {
+			assertVideo(expected.stream().filter(expectedVideo -> expectedVideo.getId().equals(actualVideo.getId()))
+					.findFirst().orElse(new VideoVO()), actualVideo);
+		}
+
+	}
+
+	private void assertVideo(VideoVO expected, VideoVO actual) {
+		assertThat(actual.getCategoriaId(), equalTo(expected.getCategoriaId()));
+		assertThat(actual.getDescricao(), equalTo(expected.getDescricao()));
+		assertThat(actual.getId(), equalTo(expected.getId()));
+		assertThat(actual.getTitulo(), equalTo(expected.getTitulo()));
+		assertThat(actual.getUrl(), equalTo(expected.getUrl()));
+	}
+
+	private void assertPage(ResponseEntity<RestResponsePage<CategoriaVO>> responseGet, Pageable pageable,
+			long totalElements) {
+		assertEquals(responseGet.getBody().getSize(), pageable.getPageSize());
+		assertEquals(responseGet.getBody().getNumber(), pageable.getPageNumber());
+		assertThat(responseGet.getBody().getTotalElements(), equalTo(totalElements));
+	}
+
+	private void assertPageVideos(ResponseEntity<RestResponsePage<VideoVO>> responseGet, Pageable pageable,
+			long totalElements) {
+		assertEquals(responseGet.getBody().getSize(), pageable.getPageSize());
+		assertEquals(responseGet.getBody().getNumber(), pageable.getPageNumber());
+		assertThat(responseGet.getBody().getTotalElements(), equalTo(totalElements));
 	}
 
 	private void assertRequiredFields(ResponseEntity<ErrorResponse> response) {
@@ -406,7 +550,6 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 
 		assertThat(response.getBody().getFieldErros(), hasItems(expectedTitulo));
 		assertThat(response.getBody().getFieldErros(), hasItems(expectedCor));
-
 	}
 
 	private Categoria createCategoria() {
@@ -422,6 +565,18 @@ public class CategoriaControllerTest extends AbstractControllerTest {
 		categoria.setCor(faker.lorem().characters(6));
 		categoria.setTitulo(faker.lorem().characters(20));
 		return categoria;
+	}
+
+	private Video createVideo(Categoria categoria) {
+		Video video = new Video();
+		video.setAtivo(true);
+		video.setCategoria(categoria);
+		video.setDescricao(faker.lorem().characters(20));
+		video.setTitulo(faker.lorem().characters(10));
+		video.setUrl(faker.lorem().characters(10));
+		videoRepository.save(video);
+		assertNotNull(video.getId());
+		return video;
 	}
 
 }

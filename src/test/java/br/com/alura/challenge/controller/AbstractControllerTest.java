@@ -1,6 +1,7 @@
 package br.com.alura.challenge.controller;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -18,6 +19,8 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -97,6 +100,7 @@ public abstract class AbstractControllerTest {
 
 	protected void assertResponseGet(ResponseEntity<?> responseGet) {
 		assertResponse(responseGet, HttpStatus.OK);
+		
 	}
 
 	protected void assertResponse(ResponseEntity<?> responseGet, HttpStatus httpStatus) {
